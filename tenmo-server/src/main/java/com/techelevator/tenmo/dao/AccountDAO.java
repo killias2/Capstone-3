@@ -7,6 +7,8 @@ public interface AccountDAO {
 
 	Account getAccount(User user);
 	
-	void updateAccount(User user);
+	void updateAccount(Account account);
+	
+	Account getAccountById(Long accountId);
 	
 }

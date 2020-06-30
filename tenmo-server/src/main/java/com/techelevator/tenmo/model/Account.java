@@ -1,10 +1,18 @@
 package com.techelevator.tenmo.model;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 public class Account {
 
+	@NotNull
 	private Long accountId;
+	@NotNull
 	private Long userId;
+	@Min(value = 0)
 	private int balance;
+	
 	public Long getAccountId() {
 		return accountId;
 	}
