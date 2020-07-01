@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -110,5 +111,32 @@ public class UserController {
 		
 		return accountDao.getAccountById(id);
 	}
+	
+	@RequestMapping(path = "/transfers", method = RequestMethod.GET)
+	public List<Transfer> getTransferList(@RequestParam(defaultValue = "") String username, @RequestParam(defaultValue = "") String status, Principal p) throws TransferNotFoundException {
+		if (!username.equals(p.getName())) {
+			User nullUser = new User();
+			return transferDao.getAllUserTransfer(nullUser);
+		}
+		
+		if (!status.equals("Pending")) {
+			return transferDao.getAllUserTransfer(userDao.findByUsername(username));
+		}
+		
+		return transferDao.getAllPendingTransfers(userDao.findByUsername(username));
+	}
+	
+	@RequestMapping(path = "/transfers/{id}", method = RequestMethod.GET)
+	public Transfer getTransferById(@PathVariable Long id, Principal p) throws TransferNotFoundException {
+		User thisUser = userDao.findByUsername(p.getName());
+		Account thisAccount = accountDao.getAccount(thisUser);
+		if (thisAccount.getAccountId() != id) {
+			return transferDao.getTransferById(null);
+		}
+		
+		return transferDao.getTransferById(id);
+	}
+	
+	
 	
 }
