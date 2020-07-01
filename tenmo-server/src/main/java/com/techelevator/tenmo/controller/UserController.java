@@ -5,10 +5,12 @@ import java.util.List;
 
 import javax.validation.Valid;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.techelevator.tenmo.dao.AccountDAO;
@@ -16,6 +18,7 @@ import com.techelevator.tenmo.dao.TransferDAO;
 import com.techelevator.tenmo.dao.UserDAO;
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.TransferNotFoundException;
 import com.techelevator.tenmo.model.User;
 
 @RestController
@@ -40,14 +43,16 @@ public class UserController {
 
 	}
 
+	@ResponseStatus(code = HttpStatus.CREATED)
 	@RequestMapping(path = "/transfers", method = RequestMethod.POST)
-	public Transfer createTransfer(@Valid @RequestBody Transfer transfer) {
+	public Transfer createTransfer(@Valid @RequestBody Transfer transfer, Principal p) throws TransferNotFoundException {
 
 		if (transfer.getTransferType().equals("Send")) {
-
-			Account fromAccount = accountDao.getAccountById(transfer.getAccountFrom());
+			
+			User thisUser = userDao.findByUsername(p.getName());
+			Account fromAccount = accountDao.getAccount(thisUser);
 			if (transfer.getAmount() > fromAccount.getBalance()) {
-				return null; // tell client cannot complete transfer
+				return transferDao.getTransferById(null);
 			} else {
 				
 				fromAccount.setBalance(fromAccount.getBalance() - transfer.getAmount());
@@ -61,6 +66,9 @@ public class UserController {
 			}
 		}
 		else {
+			User thisUser = userDao.findByUsername(p.getName());
+			Account toAccount = accountDao.getAccount(thisUser);
+			transfer.setAccountTo(toAccount.getAccountId());
 			return transferDao.createTransfer(transfer);
 		}
 	}
