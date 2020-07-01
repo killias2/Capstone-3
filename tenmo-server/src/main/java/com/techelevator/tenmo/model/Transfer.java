@@ -17,7 +17,23 @@ public class Transfer {
 	private Long accountTo;
 	@Min(value = 1)
 	private int amount;
+	@Min(value = 1)
+	private Long transferTypeId;
+	@Min(value = 1)
+	private Long transferStatusId;
 	
+	public Long getTransferTypeId() {
+		return transferTypeId;
+	}
+	public void setTransferTypeId(Long transferTypeId) {
+		this.transferTypeId = transferTypeId;
+	}
+	public Long getTransferStatusId() {
+		return transferStatusId;
+	}
+	public void setTransferStatusId(Long transferStatusId) {
+		this.transferStatusId = transferStatusId;
+	}
 	public Long getTransferId() {
 		return transferId;
 	}

@@ -42,6 +42,77 @@ public class TransferSqlDAO implements TransferDAO {
 		}
 		return allTransfers;
 	}
+	
+	@Override
+	public Transfer getTransferById(Long transferId) {
+		String sqlQuery = "SELECT t.transfer_id, t.transfer_type_id, t.transfer_status_id, " +
+				  "t.account_from, t.account_to, t.amount, s.transfer_status_desc, ty.transfer_type_desc " +
+				  "FROM transfers t " +
+				  "JOIN transfer_statuses s ON s.transfer_status_id = t.transfer_status_id " +
+				  "JOIN transfer_types ty ON ty.transfer_type_id = t.transfer_type_id " +
+				  "WHERE t.transfer_id = ?";
+
+		SqlRowSet results = jdbcTemplate.queryForRowSet(sqlQuery, transferId);
+		Transfer newTransfer = mapRowToTransfer(results);
+		return newTransfer;
+	}
+
+	@Override
+	public Transfer createTransfer(Transfer createdTransfer) {
+		String sqlInsert = "INSERT INTO transfers (transfer_type_id, transfer_status_id, " +
+				"account_from, account_to, amount) " +
+				"VALUES(?,?,?,?,?,?)";
+		createdTransfer.setTransferId(getNextTransferId());
+		jdbcTemplate.update(sqlInsert, createdTransfer.getTransferId(), createdTransfer.getTransferTypeId(), 
+				createdTransfer.getTransferStatusId(), createdTransfer.getAccountFrom(), 
+				createdTransfer.getAccountTo(), createdTransfer.getAmount());
+		
+		if (createdTransfer.getTransferType().equals("Send")) {
+			Account fromAccount = accountDao.getAccountById(createdTransfer.getAccountFrom());
+			Account toAccount = accountDao.getAccountById(createdTransfer.getAccountTo());
+			accountDao.updateAccount(fromAccount, createdTransfer);
+			accountDao.updateAccount(toAccount, createdTransfer);
+		}
+		
+		return createdTransfer;
+	}
+
+	@Override
+	public Transfer updateTransfer(Transfer updatedTransfer) {
+		String sqlUpdate = "UPDATE transfers SET transfer_status_id = ? WHERE transfer_id = ?";
+		jdbcTemplate.update(sqlUpdate, updatedTransfer.getTransferStatusId());
+		
+		if (updatedTransfer.getTransferStatus().equals("Approved")) {
+			Account fromAccount = accountDao.getAccountById(updatedTransfer.getAccountFrom());
+			Account toAccount = accountDao.getAccountById(updatedTransfer.getAccountTo());
+			accountDao.updateAccount(fromAccount, updatedTransfer);
+			accountDao.updateAccount(toAccount, updatedTransfer);
+		}
+		
+		return updatedTransfer;
+	}
+
+	@Override
+	public List<Transfer> getAllPendingTransfers(User user) {
+		Account thisAccount = accountDao.getAccount(user);
+		
+		String sqlQuery = "SELECT t.transfer_id, t.transfer_type_id, t.transfer_status_id, " +
+						  "t.account_from, t.account_to, t.amount, s.transfer_status_desc, ty.transfer_type_desc " +
+						  "FROM transfers t " +
+						  "JOIN transfer_statuses s ON s.transfer_status_id = t.transfer_status_id " +
+						  "JOIN transfer_types ty ON ty.transfer_type_id = t.transfer_type_id " +
+						  "WHERE (t.account_from = ? OR t.account_to = ?) " +
+						  "AND s.transfer_status_desc = \"Pending\"";
+		
+		SqlRowSet results = jdbcTemplate.queryForRowSet(sqlQuery, thisAccount.getAccountId(), thisAccount.getAccountId());
+		List<Transfer> allPendingTransfers = new ArrayList<>();
+		while(results.next()) {
+			Transfer transfer = new Transfer();
+			transfer = mapRowToTransfer(results);
+			allPendingTransfers.add(transfer);
+		}
+		return allPendingTransfers;
+	}
 
 	public Transfer mapRowToTransfer(SqlRowSet results) {
 		
@@ -53,8 +124,20 @@ public class TransferSqlDAO implements TransferDAO {
 		transfer.setTransferId(results.getLong("transfer_id"));
 		transfer.setTransferStatus(results.getString("transfer_status_desc"));
 		transfer.setTransferType(results.getString("transfer_type_desc"));
+		transfer.setTransferTypeId(results.getLong("transfer_type_id"));
+		transfer.setTransferStatusId(results.getLong("transfer_status_id"));
 		return transfer;
 	}
+	
+	private Long getNextTransferId() {
+		SqlRowSet nextIdResult = jdbcTemplate.queryForRowSet("SELECT nextval('seq_transfer_id')");
+			if(nextIdResult.next() ) {
+				return nextIdResult.getLong(1);
+			} else {
+				throw new RuntimeException ("Something went wrong while getting a new ID");
+			}
+	}
+
 	
 	
 }
