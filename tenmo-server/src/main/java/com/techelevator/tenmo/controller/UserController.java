@@ -38,7 +38,7 @@ public class UserController {
 		this.transferDao = transferDao;
 	}
 
-	// @PreAuthorize("permitAll")
+	//@PreAuthorize("permitAll")
 	@RequestMapping(path = "/users", method = RequestMethod.GET)
 	public List<User> getAllUsers() {
 
