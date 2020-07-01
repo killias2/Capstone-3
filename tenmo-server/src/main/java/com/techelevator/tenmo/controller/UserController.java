@@ -1,6 +1,5 @@
 package com.techelevator.tenmo.controller;
 
-import java.security.Principal;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -49,18 +48,17 @@ public class UserController {
 			if (transfer.getAmount() > fromAccount.getBalance()) {
 				return null; // tell client cannot complete transfer
 			} else {
-				
+
 				fromAccount.setBalance(fromAccount.getBalance() - transfer.getAmount());
 				accountDao.updateAccount(fromAccount);
-				
+
 				Account toAccount = accountDao.getAccountById(transfer.getAccountTo());
 				toAccount.setBalance(toAccount.getBalance() + transfer.getAmount());
 				accountDao.updateAccount(toAccount);
-				
+
 				return transferDao.createTransfer(transfer);
 			}
-		}
-		else {
+		} else {
 			return transferDao.createTransfer(transfer);
 		}
 	}
