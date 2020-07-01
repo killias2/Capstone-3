@@ -6,6 +6,7 @@ import javax.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -16,6 +17,7 @@ import com.techelevator.tenmo.dao.AccountDAO;
 import com.techelevator.tenmo.dao.TransferDAO;
 import com.techelevator.tenmo.dao.UserDAO;
 import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.model.AccountNotFoundException;
 import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.TransferNotFoundException;
 import com.techelevator.tenmo.model.User;
@@ -50,25 +52,62 @@ public class UserController {
 			
 			User thisUser = userDao.findByUsername(p.getName());
 			Account fromAccount = accountDao.getAccount(thisUser);
-			if (transfer.getAmount() > fromAccount.getBalance()) {
+			if(fromAccount.getAccountId() != transfer.getAccountFrom()) {
 				return transferDao.getTransferById(null);
-			} else {
-
-				fromAccount.setBalance(fromAccount.getBalance() - transfer.getAmount());
-				accountDao.updateAccount(fromAccount);
-
-				Account toAccount = accountDao.getAccountById(transfer.getAccountTo());
-				toAccount.setBalance(toAccount.getBalance() + transfer.getAmount());
-				accountDao.updateAccount(toAccount);
-
-				return transferDao.createTransfer(transfer);
+			}
+			else {
+				if (transfer.getAmount() > fromAccount.getBalance()) {
+					return transferDao.getTransferById(null);
+				} 	else {
+				
+//						fromAccount.setBalance(fromAccount.getBalance() - transfer.getAmount());
+//						accountDao.updateAccount(fromAccount);
+//						
+//						Account toAccount = accountDao.getAccountById(transfer.getAccountTo());
+//						toAccount.setBalance(toAccount.getBalance() + transfer.getAmount());
+//						accountDao.updateAccount(toAccount);
+						
+						return transferDao.createTransfer(transfer);
+					}
 			}
 		}
 		else {
 			User thisUser = userDao.findByUsername(p.getName());
 			Account toAccount = accountDao.getAccount(thisUser);
-			transfer.setAccountTo(toAccount.getAccountId());
-			return transferDao.createTransfer(transfer);
+			if(toAccount.getAccountId() != transfer.getAccountTo()) {
+				return transferDao.getTransferById(null);
+			}
+			else {
+			
+				transfer.setAccountTo(toAccount.getAccountId());
+				return transferDao.createTransfer(transfer);
+			}
 		}
 	}
+	@ResponseStatus(code = HttpStatus.NO_CONTENT)
+	@RequestMapping(path = "/transfers/{id}", method = RequestMethod.PUT)
+	public Transfer updateTransfer(@Valid @RequestBody Transfer transfer, @PathVariable long id, Principal p)  throws TransferNotFoundException {
+		
+		User thisUser = userDao.findByUsername(p.getName());
+		Account fromAccount = accountDao.getAccount(thisUser);
+		if(fromAccount.getAccountId() != transfer.getAccountFrom()) {
+			return transferDao.getTransferById(null);
+		}
+		
+		
+		return transferDao.updateTransfer(transfer);
+	}
+	
+	@RequestMapping(path = "/users/{id}/balance", method = RequestMethod.GET)
+	public Account getAccountBalance(@PathVariable long id, Principal p) throws AccountNotFoundException {
+		
+		User thisUser = userDao.findByUsername(p.getName());
+		
+		if(id != thisUser.getId()) {
+			return accountDao.getAccountById(null);
+		}
+		
+		return accountDao.getAccountById(id);
+	}
+	
 }
