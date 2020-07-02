@@ -107,40 +107,58 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 		try {
 			List<User> userList = userService.getUserList(currentUser);
 			Map<String, User> thisMap = makeUserList(userList);
-//			for(User user : userList) {
-//				System.out.println("Username: " + user.getUsername() + " \n"
-//								  +"Id: " + user.getId());
-			System.out.println("Send money to (user ID): ");
+			System.out.println("Send money to (enter user ID)");
 			boolean inputChecker = false;
 			while (inputChecker == false) {
-				String idChoice = console.getUserInput("Enter user ID: ");
+				String idChoice = console.getUserInput("Enter user ID");
 				if (thisMap.containsKey(idChoice)) {
-					String moneyAmount = console.getUserInput("Enter amount to transfer:");
-					int transferAmount = 0;
-					boolean inputChecker2 = false;
-					while (inputChecker2 == false) {
-						try {
-							if (Double.parseDouble(moneyAmount) <= 0) {
-								System.out.println("Please enter an amount greater than 0.");
-							} else {
-								transferAmount = (int) (Double.parseDouble(moneyAmount) * 100);
-								inputChecker2 = true;
+					if(idChoice.equals(String.valueOf(currentUser.getUser().getId()))) {
+						System.out.println("Please do not choose yourself for a transaction.");
+					}
+					else {
+						System.out.println("You have selected: " + idChoice + " " + thisMap.get(idChoice).getUsername());
+						Account userAccount = userService.getAccount(currentUser);
+						String cancelChoice = console.getUserInput("Enter 0 to cancel or anything else to continue");
+						if(cancelChoice.equals("0")) {
+							inputChecker = true;
+						}
+						else {
+							System.out.println("Your current balance: " + toMoney(userAccount.getBalance()));
+							String moneyAmount = "";
+							int transferAmount = 0;
+							boolean inputChecker2 = false;
+							while (inputChecker2 == false) {
+								try {
+									moneyAmount = console.getUserInput("Enter amount to transfer");
+									if (Double.parseDouble(moneyAmount) <= 0) {
+										System.out.println("Please enter an amount greater than 0.");
+									} 
+									else if (Double.parseDouble(moneyAmount) > ((double)userAccount.getBalance()/100)) {
+										System.out.println("Transfers should not be larger than remaining account balance.");
+									}
+									
+									else {
+										transferAmount = (int) (Double.parseDouble(moneyAmount) * 100);
+										inputChecker2 = true;
+									}
+	
+								} catch (NumberFormatException e) {
+									System.out.println("This is not a valid choice. Please try again.");
+								}
 							}
-
-						} catch (NumberFormatException e) {
-							System.out.println("This is not a valid choice. Please try again.");
+							Transfer thisTransfer = new Transfer();
+							thisTransfer.setTransferType("Send");
+							thisTransfer.setTransferTypeId(2L);
+							thisTransfer.setTransferStatus("Approved");
+							thisTransfer.setTransferStatusId(2L);
+							thisTransfer.setAmount(transferAmount);
+							thisTransfer.setAccountFrom(userAccount.getAccountId());
+							thisTransfer.setAccountTo(userService.getAccountId(currentUser, thisMap.get(idChoice)));
+							userService.createTransfer(thisTransfer, currentUser);
+							System.out.println("Yay, you made a transfer!");
+							inputChecker = true;
 						}
 					}
-					Transfer thisTransfer = new Transfer();
-					thisTransfer.setTransferType("Send");
-					thisTransfer.setTransferTypeId(2L);
-					thisTransfer.setTransferStatus("Approved");
-					thisTransfer.setTransferStatusId(2L);
-					thisTransfer.setAmount(transferAmount);
-					thisTransfer.setAccountFrom(userService.getAccount(currentUser).getAccountId());
-					thisTransfer.setAccountTo(userService.getAccountId(currentUser, thisMap.get(idChoice)));
-					userService.createTransfer(thisTransfer, currentUser);
-					inputChecker = true;
 				} else if (idChoice.equals("0")) {
 					inputChecker = true;
 				}

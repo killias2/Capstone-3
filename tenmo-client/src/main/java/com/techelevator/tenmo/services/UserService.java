@@ -7,6 +7,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
@@ -29,6 +30,16 @@ public class UserService {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setBearerAuth(authUser.getToken());
 		HttpEntity entity = new HttpEntity<>(headers);
+
+		return entity;
+	}
+	
+	private HttpEntity<Transfer> makeTransferEntity(AuthenticatedUser authUser, Transfer menuTransfer) {
+
+		HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setBearerAuth(authUser.getToken());
+		HttpEntity<Transfer> entity = new HttpEntity<>(menuTransfer,headers);
 
 		return entity;
 	}
@@ -66,15 +77,15 @@ public class UserService {
 
 	public Long getAccountId(AuthenticatedUser authUser, User user) throws UserServiceException {
 
-		Account thisAccount = new Account();
+		Long accountId = 0L;
 		try {
-			thisAccount = restTemplate.exchange(BASE_URL + "users/" + user.getId() + "/accountid", HttpMethod.GET,
-					makeAuthEntity(authUser), Account.class).getBody();
+			accountId = restTemplate.exchange(BASE_URL + "users/" + user.getId() + "/accountid", HttpMethod.GET,
+					makeAuthEntity(authUser), Long.class).getBody();
 		} catch (RestClientResponseException e) {
 			throw new UserServiceException("There was an error, you stink!");
 		}
 
-		return thisAccount.getAccountId();
+		return accountId;
 	}
 
 	public Transfer getTransferById(Long transferId, AuthenticatedUser authUser) throws UserServiceException {
@@ -91,10 +102,10 @@ public class UserService {
 
 	public Transfer createTransfer(Transfer menuTransfer, AuthenticatedUser authUser) throws UserServiceException {
 		try {
-			menuTransfer = restTemplate.postForObject(BASE_URL + "/transfers", makeAuthEntity(authUser),
+			menuTransfer = restTemplate.postForObject(BASE_URL + "/transfers", makeTransferEntity(authUser, menuTransfer),
 					Transfer.class);
 		} catch (RestClientResponseException e) {
-			throw new UserServiceException("There was an error, you stink!");
+			throw new UserServiceException("There was an issue with your request.");
 		}
 		return menuTransfer;
 	}

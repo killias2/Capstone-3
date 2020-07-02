@@ -45,14 +45,14 @@ public class AccountSqlDAO implements AccountDAO{
 		}
 		
 		
-		String sqlQuery = "UPDATE account "
+		String sqlUpdate = "UPDATE accounts "
 						+ "SET balance = (? " + evalType + " ?) / 100 "
 						+ "WHERE account_id = ?";
 		
 		//account.setBalance((double) account.getBalance() / 100);
 		//transfer.setAmount((double) transfer.getAmount() / 100);
 		
-		SqlRowSet results = jdbcTemplate.queryForRowSet(sqlQuery, account.getBalance(), transfer.getAmount(), account.getAccountId());
+		jdbcTemplate.update(sqlUpdate, account.getBalance(), transfer.getAmount(), account.getAccountId());
 		
 	}
 

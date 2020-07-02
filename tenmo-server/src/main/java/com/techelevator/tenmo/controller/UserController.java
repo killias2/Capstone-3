@@ -114,7 +114,6 @@ public class UserController {
 	
 	@RequestMapping(path = "/users/{id}/accountid", method = RequestMethod.GET)
 	public Long getAccountId(@PathVariable long id, Principal p) throws AccountNotFoundException {
-		
 		Long accountId = userDao.findAccountIdByUserId(id);
 		
 		return accountId;

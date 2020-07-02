@@ -62,13 +62,14 @@ public class TransferSqlDAO implements TransferDAO {
 
 	@Override
 	public Transfer createTransfer(Transfer createdTransfer) {
-		String sqlInsert = "INSERT INTO transfers (transfer_type_id, transfer_status_id, " +
+		String sqlInsert = "INSERT INTO transfers (transfer_id, transfer_type_id, transfer_status_id, " +
 				"account_from, account_to, amount) " +
 				"VALUES(?,?,?,?,?,?)";
 		createdTransfer.setTransferId(getNextTransferId());
+		double dubMoney = ((double)createdTransfer.getAmount()/ 100);
 		jdbcTemplate.update(sqlInsert, createdTransfer.getTransferId(), createdTransfer.getTransferTypeId(), 
 				createdTransfer.getTransferStatusId(), createdTransfer.getAccountFrom(), 
-				createdTransfer.getAccountTo(), createdTransfer.getAmount());
+				createdTransfer.getAccountTo(), dubMoney);
 		
 		if (createdTransfer.getTransferType().equals("Send")) {
 			Account fromAccount = accountDao.getAccountById(createdTransfer.getAccountFrom());
