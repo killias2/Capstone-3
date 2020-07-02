@@ -19,12 +19,19 @@ public class AccountSqlDAO implements AccountDAO{
 	
 	public Account getAccount(User user) {
 		
+		Account foundAccount = new Account();
+		
 		String sqlQuery = "SELECT account_id, user_id, balance "
 						+ "FROM accounts "
 						+ "WHERE user_id = ?";
+		
 		SqlRowSet results = jdbcTemplate.queryForRowSet(sqlQuery, user.getId());
 		
-		return mapRowToAccount(results);
+		if(results.next()) {
+			foundAccount = mapRowToAccount(results);
+		}
+		
+		return foundAccount;
 		
 	}
 

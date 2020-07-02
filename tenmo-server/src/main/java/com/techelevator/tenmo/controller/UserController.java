@@ -106,10 +106,10 @@ public class UserController {
 		User thisUser = userDao.findByUsername(p.getName());
 		
 		if(id != thisUser.getId()) {
-			return accountDao.getAccountById(null);
+			return accountDao.getAccount(null);
 		}
 		
-		return accountDao.getAccountById(id);
+		return accountDao.getAccount(thisUser);
 	}
 	
 	@RequestMapping(path = "/transfers", method = RequestMethod.GET)
