@@ -29,6 +29,13 @@ public class UserSqlDAO implements UserDAO {
     }
 
     @Override
+    public Long findAccountIdByUserId(Long id) {
+        return jdbcTemplate.queryForObject("SELECT account_id FROM users " +
+        				"JOIN accounts ON users.user_id = accounts.user_id " +
+        				"WHERE users.user_id = ?", Long.class, id);
+    }
+    
+    @Override
     public List<User> findAll() {
         List<User> users = new ArrayList<>();
         String sql = "select * from users";

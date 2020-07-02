@@ -45,6 +45,7 @@ public class TransferSqlDAO implements TransferDAO {
 	
 	@Override
 	public Transfer getTransferById(Long transferId) {
+		Transfer foundTransfer = new Transfer();
 		String sqlQuery = "SELECT t.transfer_id, t.transfer_type_id, t.transfer_status_id, " +
 				  "t.account_from, t.account_to, t.amount, s.transfer_status_desc, ty.transfer_type_desc " +
 				  "FROM transfers t " +
@@ -53,8 +54,10 @@ public class TransferSqlDAO implements TransferDAO {
 				  "WHERE t.transfer_id = ?";
 
 		SqlRowSet results = jdbcTemplate.queryForRowSet(sqlQuery, transferId);
-		Transfer newTransfer = mapRowToTransfer(results);
-		return newTransfer;
+		if(results.next()) {
+			foundTransfer = mapRowToTransfer(results);
+		}
+		return foundTransfer;
 	}
 
 	@Override
