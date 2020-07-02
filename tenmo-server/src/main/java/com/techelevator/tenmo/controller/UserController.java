@@ -112,6 +112,14 @@ public class UserController {
 		return accountDao.getAccount(thisUser);
 	}
 	
+	@RequestMapping(path = "/users/{id}/accountid", method = RequestMethod.GET)
+	public Long getAccountId(@PathVariable long id, Principal p) throws AccountNotFoundException {
+		
+		Long accountId = userDao.findAccountIdByUserId(id);
+		
+		return accountId;
+	}
+	
 	@RequestMapping(path = "/transfers", method = RequestMethod.GET)
 	public List<Transfer> getTransferList(@RequestParam(defaultValue = "") String username, @RequestParam(defaultValue = "") String status, Principal p) throws TransferNotFoundException {
 		if (!username.equals(p.getName())) {

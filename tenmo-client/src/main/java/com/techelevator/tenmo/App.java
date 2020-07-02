@@ -1,9 +1,12 @@
 package com.techelevator.tenmo;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.techelevator.tenmo.models.Account;
 import com.techelevator.tenmo.models.AuthenticatedUser;
+import com.techelevator.tenmo.models.Transfer;
 import com.techelevator.tenmo.models.User;
 import com.techelevator.tenmo.models.UserCredentials;
 import com.techelevator.tenmo.services.AuthenticationService;
@@ -96,28 +99,64 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 
 	private void viewPendingRequests() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	private void sendBucks() {
-		// TODO Auto-generated method stub
-		
+
 		try {
 			List<User> userList = userService.getUserList(currentUser);
-			
-			for(User user : userList) {
-				System.out.println("Username: " + user.getUsername() + " \n"
-								  +"Id: " + user.getId());
+			Map<String, User> thisMap = makeUserList(userList);
+//			for(User user : userList) {
+//				System.out.println("Username: " + user.getUsername() + " \n"
+//								  +"Id: " + user.getId());
+			System.out.println("Send money to (user ID): ");
+			boolean inputChecker = false;
+			while (inputChecker == false) {
+				String idChoice = console.getUserInput("Enter user ID: ");
+				if (thisMap.containsKey(idChoice)) {
+					String moneyAmount = console.getUserInput("Enter amount to transfer:");
+					int transferAmount = 0;
+					boolean inputChecker2 = false;
+					while (inputChecker2 == false) {
+						try {
+							if (Double.parseDouble(moneyAmount) <= 0) {
+								System.out.println("Please enter an amount greater than 0.");
+							} else {
+								transferAmount = (int) (Double.parseDouble(moneyAmount) * 100);
+								inputChecker2 = true;
+							}
+
+						} catch (NumberFormatException e) {
+							System.out.println("This is not a valid choice. Please try again.");
+						}
+					}
+					Transfer thisTransfer = new Transfer();
+					thisTransfer.setTransferType("Send");
+					thisTransfer.setTransferTypeId(2L);
+					thisTransfer.setTransferStatus("Approved");
+					thisTransfer.setTransferStatusId(2L);
+					thisTransfer.setAmount(transferAmount);
+					thisTransfer.setAccountFrom(userService.getAccount(currentUser).getAccountId());
+					thisTransfer.setAccountTo(userService.getAccountId(currentUser, thisMap.get(idChoice)));
+					userService.createTransfer(thisTransfer, currentUser);
+					inputChecker = true;
+				} else if (idChoice.equals("0")) {
+					inputChecker = true;
+				}
+
+				else {
+					System.out.println("Your input is invalid. Please try again.");
+				}
 			}
 		} catch (UserServiceException e) {
-			// TODO Auto-generated catch block
 			System.out.println("There was an error, you stink!");
 		}
-		
+
 	}
 
+
 	private void requestBucks() {
-		// TODO Auto-generated method stub
 		
 	}
 	
@@ -187,4 +226,16 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 		money = money + ".00";
 		return money;
 	}
+	
+	public Map<String, User> makeUserList(List<User> userList) {
+		Map<String, User> userMap = new HashMap<>();
+		for (User user : userList) {
+			String userId = String.valueOf(user.getId());
+			userMap.put(userId, user);
+			System.out.println(userId + "\t" + user.getUsername());
+		}
+		return userMap;
+	}
+	
+	
 }
