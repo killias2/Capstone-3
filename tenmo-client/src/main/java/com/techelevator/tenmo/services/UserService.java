@@ -109,5 +109,38 @@ public class UserService {
 		}
 		return menuTransfer;
 	}
+	
+	public List<Transfer> getTransferList(AuthenticatedUser authUser) throws UserServiceException {
+		List<Transfer> transferList = new ArrayList<>();
+		try {
+			transferList = restTemplate.exchange(BASE_URL + "/transfers?username=" + authUser.getUser().getUsername(), HttpMethod.GET,
+					makeAuthEntity(authUser), new ParameterizedTypeReference<List<Transfer>>() {
+			}).getBody();
+		} catch (RestClientResponseException e) {
+			throw new UserServiceException("There was an issue with your request.");
+		}
+		return transferList;
+	}
 
+	public List<Transfer> getPendingTransferList(AuthenticatedUser authUser) throws UserServiceException {
+		List<Transfer> transferList = new ArrayList<>();
+		try {
+			transferList = restTemplate.exchange(BASE_URL + "/transfers?username=" + authUser.getUser().getUsername() + "&status=Pending", HttpMethod.GET,
+					makeAuthEntity(authUser), new ParameterizedTypeReference<List<Transfer>>() {
+			}).getBody();
+		} catch (RestClientResponseException e) {
+			throw new UserServiceException("There was an issue with your request.");
+		}
+		return transferList;
+	}
+	
+	public void updateTransfer(Transfer menuTransfer, AuthenticatedUser authUser) throws UserServiceException {
+		try {
+			restTemplate.put(BASE_URL + "/transfers/" + menuTransfer.getTransferId(), makeTransferEntity(authUser, menuTransfer));
+		} catch (RestClientResponseException e) {
+			throw new UserServiceException("There was an issue with your request.");
+		}
+		
+	}
+	
 }

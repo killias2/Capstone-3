@@ -115,7 +115,7 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 						+ "for a specific Transaction, or anything else to return to menu");
 				if(transferHistoryChoice.equals("1")) {
 					boolean input2 = false;
-					while (!inputChecker) {
+					while (!input2) {
 						try {
 							String transferIDChoice = console.getUserInput("Enter a transfer's ID number " +
 								"in order to retrieve information on that transfer alone");
@@ -125,14 +125,14 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 							else {
 								Long transferId = Long.parseLong(transferIDChoice);
 								Transfer thisTransfer = userService.getTransferById(transferId, currentUser);
-								if (thisTransfer.getTransferId().equals(null)){
-									System.out.println("I'm sorry, but we could not find your selection");
+								if (thisTransfer.getTransferId() == null){
+									System.out.println("I'm sorry, but we could not find your selection.");
 								}
 								else {
 									System.out.println("Here is your selection: ");
 									System.out.println("\nTransfer ID: " + thisTransfer.getTransferId() + "\n" +
 											"Transfer Type: " + thisTransfer.getTransferType() + "\n" +
-											"Transfer Status : " + thisTransfer.getTransferStatus() + "\n" + 
+											"Transfer Status: " + thisTransfer.getTransferStatus() + "\n" + 
 											"Account From: " + thisTransfer.getAccountFrom() + "\n" + 
 											"Account To: " + thisTransfer.getAccountTo() + "\n" + 
 											"Amount: " + toMoney(thisTransfer.getAmount()) + "\n");
@@ -158,7 +158,7 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 
 	private void viewPendingRequests() {
 		try {
-			List<Transfer> transferList = userService.getPendjngTransferList(currentUser);
+			List<Transfer> transferList = userService.getPendingTransferList(currentUser);
 			if (transferList.isEmpty()) {
 				System.out.println("You have no pending transfers.");
 			}
@@ -214,22 +214,32 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 								while (!input2) {
 									String pendingAction = console.getUserInput("Enter a 1 to approve a transfer, a 2 to reject a transfer, or "
 											+ "anything else to choose another transfer");
+									Transfer thisTransfer = thisMap.get(pendingChoice);
 									if (pendingAction.equals("1")) {
 										String checkApproval = console.getUserInput("This will approve the transfer. Are you sure? Type 1 to confirm. "
 												+ "Anything else will return you to the prior step.");
 										if (checkApproval.equals("1")) {
-											//check balance, reject approval or update transfer
-											input2 = true;
-											inputChecker = true;
-										}
+											if (thisAccount.getBalance() < thisTransfer.getAmount()) {
+												System.out.println("You do not have enough money in your account to complete this transfer.");
+												input2 = true;
+											} else {
+												thisTransfer.setTransferStatus("Approved");
+												thisTransfer.setTransferStatusId(2L);	
+												input2 = true;
+												inputChecker = true;
+												userService.updateTransfer(thisTransfer, currentUser);
+											}
+										}	
 											
 									} else if (pendingAction.equals("2")) {
 										String checkApproval = console.getUserInput("This will reject the transfer. Are you sure? Type 2 to confirm. "
 												+ "Anything else will return you to the prior step.");
 										if (checkApproval.equals("2")) {
-											//update transfer
+											thisTransfer.setTransferStatus("Rejected");
+											thisTransfer.setTransferStatusId(3L);
 											input2 = true;
 											inputChecker = true;
+											userService.updateTransfer(thisTransfer, currentUser);
 										}
 									}
 									else {
@@ -449,8 +459,7 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 	
 	private String toMoney(int amount) {
 		String money = "";
-		money = money.valueOf(amount / 100);
-		money = money + ".00";
+		money = String.valueOf(amount / 100) + ".00";
 		return money;
 	}
 	
