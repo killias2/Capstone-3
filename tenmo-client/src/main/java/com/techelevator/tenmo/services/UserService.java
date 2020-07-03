@@ -56,7 +56,7 @@ public class UserService {
 					new ParameterizedTypeReference<List<User>>() {
 					}).getBody();
 		} catch (RestClientResponseException e) {
-			throw new UserServiceException("There was an error, you stink!");
+			throw new UserServiceException("There was an issue with your request.");
 		}
 
 		return userList;
@@ -69,7 +69,7 @@ public class UserService {
 			thisAccount = restTemplate.exchange(BASE_URL + "users/" + authUser.getUser().getId() + "/balance",
 					HttpMethod.GET, makeAuthEntity(authUser), Account.class).getBody();
 		} catch (RestClientResponseException e) {
-			throw new UserServiceException("There was an error, you stink!");
+			throw new UserServiceException("There was an issue with your request.");
 		}
 
 		return thisAccount;
@@ -82,7 +82,7 @@ public class UserService {
 			accountId = restTemplate.exchange(BASE_URL + "users/" + user.getId() + "/accountid", HttpMethod.GET,
 					makeAuthEntity(authUser), Long.class).getBody();
 		} catch (RestClientResponseException e) {
-			throw new UserServiceException("There was an error, you stink!");
+			throw new UserServiceException("There was an issue with your request.");
 		}
 
 		return accountId;
@@ -95,7 +95,7 @@ public class UserService {
 					makeAuthEntity(authUser), Transfer.class).getBody();
 
 		} catch (RestClientResponseException e) {
-			throw new UserServiceException("There was an error, you stink!");
+			throw new UserServiceException("There was an issue with your request.");
 		}
 		return thisTransfer;
 	}

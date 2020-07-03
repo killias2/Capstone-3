@@ -1,5 +1,6 @@
 package com.techelevator.tenmo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,26 +80,170 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 	}
 
 	private void viewCurrentBalance() {
-		// TODO Auto-generated method stub
 		try {
 			Account thisAccount = userService.getAccount(currentUser);
 			System.out.println("Account: " + thisAccount.getAccountId() + "\n"
 							  +"Balance: " + toMoney(thisAccount.getBalance()));
 		} catch (UserServiceException e) {
-			// TODO Auto-generated catch block
-			System.out.println("There was an error, you stink!");
+			System.out.println("There was an error with your selection.");
 		}
 		
 		
 	}
 
 	private void viewTransferHistory() {
-		// TODO Auto-generated method stub
+		try {
+			List<Transfer> transferList = userService.getTransferList(currentUser);
+			if (transferList.isEmpty()) {
+				System.out.println("You have had no transfers.");
+			}
+			else {
+				for (Transfer transfer : transferList) {
+					
+					System.out.println("\nTransfer ID: " + transfer.getTransferId() + "\n" +
+								"Transfer Type: " + transfer.getTransferType() + "\n" +
+								"Transfer Status : " + transfer.getTransferStatus() + "\n" + 
+								"Account From: " + transfer.getAccountFrom() + "\n" + 
+								"Account To: " + transfer.getAccountTo() + "\n" + 
+								"Amount: " + toMoney(transfer.getAmount()) + "\n");
+					
+				}
+			}
+			boolean inputChecker = false;
+			while (!inputChecker) {
+				String transferHistoryChoice = console.getUserInput("Enter 1 to search "
+						+ "for a specific Transaction, or anything else to return to menu");
+				if(transferHistoryChoice.equals("1")) {
+					boolean input2 = false;
+					while (!inputChecker) {
+						try {
+							String transferIDChoice = console.getUserInput("Enter a transfer's ID number " +
+								"in order to retrieve information on that transfer alone");
+							if (Long.parseLong(transferIDChoice) <= 0) {
+								System.out.println("Please enter an amount greater than 0.");
+							} 
+							else {
+								Long transferId = Long.parseLong(transferIDChoice);
+								Transfer thisTransfer = userService.getTransferById(transferId, currentUser);
+								if (thisTransfer.getTransferId().equals(null)){
+									System.out.println("I'm sorry, but we could not find your selection");
+								}
+								else {
+									System.out.println("Here is your selection: ");
+									System.out.println("\nTransfer ID: " + thisTransfer.getTransferId() + "\n" +
+											"Transfer Type: " + thisTransfer.getTransferType() + "\n" +
+											"Transfer Status : " + thisTransfer.getTransferStatus() + "\n" + 
+											"Account From: " + thisTransfer.getAccountFrom() + "\n" + 
+											"Account To: " + thisTransfer.getAccountTo() + "\n" + 
+											"Amount: " + toMoney(thisTransfer.getAmount()) + "\n");
+								}
+								input2 = true;
+								inputChecker = true;
+							}
+						} catch (NumberFormatException e) {
+							System.out.println("This is not a valid choice. Please try again.");
+						}
+					}
+				}
+				else {
+					inputChecker = true;
+				}
+			}
+			
+		} catch (UserServiceException e) {
+			System.out.println("There was an error with your selection.");
+		}
 		
 	}
 
 	private void viewPendingRequests() {
-		// TODO Auto-generated method stub
+		try {
+			List<Transfer> transferList = userService.getPendjngTransferList(currentUser);
+			if (transferList.isEmpty()) {
+				System.out.println("You have no pending transfers.");
+			}
+			else {
+				Account userAccount = userService.getAccount(currentUser);
+				List<Transfer> pendingFromTransfers = new ArrayList<>();
+				Map<String, Transfer> thisMap = new HashMap<>();
+				for (int i = 0; i < transferList.size(); i++) {
+					if (transferList.get(i).getAccountFrom() == userAccount.getAccountId()) {
+						pendingFromTransfers.add(transferList.get(i));
+						transferList.remove(i);
+						i--;
+					}
+					if (transferList.isEmpty()) {
+						System.out.println("There are no pending transfers for which you are awaiting " +
+								"another user's action.");
+					}
+					else {
+						for (Transfer transfer : transferList) {
+							System.out.println("\nTransfer ID: " + transfer.getTransferId() + "\n" +
+							"Transfer Type: " + transfer.getTransferType() + "\n" +
+							"Transfer Status : " + transfer.getTransferStatus() + "\n" + 
+							"Account From: " + transfer.getAccountFrom() + "\n" + 
+							"Account To: " + transfer.getAccountTo() + "\n" + 
+							"Amount: " + toMoney(transfer.getAmount()) + "\n");
+						}
+					}
+					if (pendingFromTransfers.isEmpty()){
+						System.out.println("You have no pending transfers that require action on your part.");
+					}
+				}
+				if (!pendingFromTransfers.isEmpty()) {
+					boolean inputChecker = false;
+					while (!inputChecker) {
+						thisMap = makeTransferList(pendingFromTransfers);
+						String pendingChoice = console.getUserInput("Enter 0 to return to the main menu, or enter the " + 
+								"transfer ID for a pending transfer requiring your approval or rejection");
+						if (pendingChoice.equals("0")) {
+							inputChecker = true;
+						}
+						else {
+							if (thisMap.containsKey(pendingChoice)) {
+								Transfer transfer = thisMap.get(pendingChoice);
+								System.out.println("\nTransfer ID: " + transfer.getTransferId() + "\n" +
+										"Transfer Type: " + transfer.getTransferType() + "\n" +
+										"Transfer Status : " + transfer.getTransferStatus() + "\n" + 
+										"Account From: " + transfer.getAccountFrom() + "\n" + 
+										"Account To: " + transfer.getAccountTo() + "\n" + 
+										"Amount: " + toMoney(transfer.getAmount()) + "\n");
+								Account thisAccount = userService.getAccount(currentUser);
+								System.out.println("Your current balance: " + toMoney(thisAccount.getBalance()));
+								boolean input2 = false;
+								while (!input2) {
+									String pendingAction = console.getUserInput("Enter a 1 to approve a transfer, a 2 to reject a transfer, or "
+											+ "anything else to choose another transfer");
+									if (pendingAction.equals("1")) {
+										String checkApproval = console.getUserInput("This will approve the transfer. Are you sure? Type 1 to confirm. "
+												+ "Anything else will return you to the prior step.");
+										if (checkApproval.equals("1")) {
+											//check balance, reject approval or update transfer
+											input2 = true;
+											inputChecker = true;
+										}
+											
+									} else if (pendingAction.equals("2")) {
+										String checkApproval = console.getUserInput("This will reject the transfer. Are you sure? Type 2 to confirm. "
+												+ "Anything else will return you to the prior step.");
+										if (checkApproval.equals("2")) {
+											//update transfer
+											input2 = true;
+											inputChecker = true;
+										}
+									}
+									else {
+										input2 = true;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch (UserServiceException e) {
+			System.out.println("There was an error with your selection.");
+		}
 
 	}
 
@@ -168,13 +313,77 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 				}
 			}
 		} catch (UserServiceException e) {
-			System.out.println("There was an error, you stink!");
+			System.out.println("There was an error with your selection. Please try again.");
 		}
 
 	}
 
 
 	private void requestBucks() {
+		
+		try {
+			List<User> userList = userService.getUserList(currentUser);
+			Map<String, User> thisMap = makeUserList(userList);
+			System.out.println("Request money from (enter user ID)");
+			boolean inputChecker = false;
+			while (inputChecker == false) {
+				String idChoice = console.getUserInput("Enter user ID");
+				if (thisMap.containsKey(idChoice)) {
+					if(idChoice.equals(String.valueOf(currentUser.getUser().getId()))) {
+						System.out.println("Please do not choose yourself for a transaction.");
+					}
+					else {
+						System.out.println("You have selected: " + idChoice + " " + thisMap.get(idChoice).getUsername());
+						Account userAccount = userService.getAccount(currentUser);
+						String cancelChoice = console.getUserInput("Enter 0 to cancel or anything else to continue");
+						if(cancelChoice.equals("0")) {
+							inputChecker = true;
+						}
+						else {
+							System.out.println("Your current balance: " + toMoney(userAccount.getBalance()));
+							String moneyAmount = "";
+							int transferAmount = 0;
+							boolean inputChecker2 = false;
+							while (inputChecker2 == false) {
+								try {
+									moneyAmount = console.getUserInput("Enter amount to request");
+									if (Double.parseDouble(moneyAmount) <= 0) {
+										System.out.println("Please enter an amount greater than 0.");
+									} 
+									
+									else {
+										transferAmount = (int) (Double.parseDouble(moneyAmount) * 100);
+										inputChecker2 = true;
+									}
+	
+								} catch (NumberFormatException e) {
+									System.out.println("This is not a valid choice. Please try again.");
+								}
+							}
+							Transfer thisTransfer = new Transfer();
+							thisTransfer.setTransferType("Request");
+							thisTransfer.setTransferTypeId(1L);
+							thisTransfer.setTransferStatus("Pending");
+							thisTransfer.setTransferStatusId(1L);
+							thisTransfer.setAmount(transferAmount);
+							thisTransfer.setAccountTo(userAccount.getAccountId());
+							thisTransfer.setAccountFrom(userService.getAccountId(currentUser, thisMap.get(idChoice)));
+							userService.createTransfer(thisTransfer, currentUser);
+							System.out.println("Yay, you made a transfer!");
+							inputChecker = true;
+						}
+					}
+				} else if (idChoice.equals("0")) {
+					inputChecker = true;
+				}
+
+				else {
+					System.out.println("Your input is invalid. Please try again.");
+				}
+			}
+		} catch (UserServiceException e) {
+			System.out.println("There was an error with your selection. Please try again.");
+		}
 		
 	}
 	
@@ -255,5 +464,19 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 		return userMap;
 	}
 	
+	public Map<String, Transfer> makeTransferList(List<Transfer> transferList) {
+		Map<String, Transfer> transferMap = new HashMap<>();
+		for (Transfer transfer : transferList) {
+			String transferId = String.valueOf(transfer.getTransferId());
+			transferMap.put(transferId, transfer);
+			System.out.println("\nTransfer ID: " + transfer.getTransferId() + "\n" +
+			"Transfer Type: " + transfer.getTransferType() + "\n" +
+			"Transfer Status : " + transfer.getTransferStatus() + "\n" + 
+			"Account From: " + transfer.getAccountFrom() + "\n" + 
+			"Account To: " + transfer.getAccountTo() + "\n" + 
+			"Amount: " + toMoney(transfer.getAmount()) + "\n");
+		}
+		return transferMap;
+	}
 	
 }
