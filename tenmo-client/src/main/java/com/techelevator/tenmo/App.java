@@ -177,6 +177,7 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 								"another user's action.");
 					}
 					else {
+						System.out.println("Here are pending transfers which you requested:");
 						for (Transfer transfer : transferList) {
 							System.out.println("\nTransfer ID: " + transfer.getTransferId() + "\n" +
 							"Transfer Type: " + transfer.getTransferType() + "\n" +
@@ -193,6 +194,7 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 				if (!pendingFromTransfers.isEmpty()) {
 					boolean inputChecker = false;
 					while (!inputChecker) {
+						System.out.println("Here are pending transfers which require action on your part:");
 						thisMap = makeTransferList(pendingFromTransfers);
 						String pendingChoice = console.getUserInput("Enter 0 to return to the main menu, or enter the " + 
 								"transfer ID for a pending transfer requiring your approval or rejection");
@@ -217,7 +219,7 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 									Transfer thisTransfer = thisMap.get(pendingChoice);
 									if (pendingAction.equals("1")) {
 										String checkApproval = console.getUserInput("This will approve the transfer. Are you sure? Type 1 to confirm. "
-												+ "Anything else will return you to the prior step.");
+												+ "Anything else will return you to the prior step");
 										if (checkApproval.equals("1")) {
 											if (thisAccount.getBalance() < thisTransfer.getAmount()) {
 												System.out.println("You do not have enough money in your account to complete this transfer.");
@@ -225,21 +227,23 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 											} else {
 												thisTransfer.setTransferStatus("Approved");
 												thisTransfer.setTransferStatusId(2L);	
+												userService.updateTransfer(thisTransfer, currentUser);
+												System.out.println("You have approved the transfer.");
 												input2 = true;
 												inputChecker = true;
-												userService.updateTransfer(thisTransfer, currentUser);
 											}
 										}	
 											
 									} else if (pendingAction.equals("2")) {
 										String checkApproval = console.getUserInput("This will reject the transfer. Are you sure? Type 2 to confirm. "
-												+ "Anything else will return you to the prior step.");
+												+ "Anything else will return you to the prior step");
 										if (checkApproval.equals("2")) {
 											thisTransfer.setTransferStatus("Rejected");
 											thisTransfer.setTransferStatusId(3L);
+											userService.updateTransfer(thisTransfer, currentUser);
+											System.out.println("You rejected the transfer.");
 											input2 = true;
 											inputChecker = true;
-											userService.updateTransfer(thisTransfer, currentUser);
 										}
 									}
 									else {
