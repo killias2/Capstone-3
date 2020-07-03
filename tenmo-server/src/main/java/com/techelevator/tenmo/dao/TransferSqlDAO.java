@@ -84,7 +84,7 @@ public class TransferSqlDAO implements TransferDAO {
 	@Override
 	public Transfer updateTransfer(Transfer updatedTransfer) {
 		String sqlUpdate = "UPDATE transfers SET transfer_status_id = ? WHERE transfer_id = ?";
-		jdbcTemplate.update(sqlUpdate, updatedTransfer.getTransferStatusId());
+		jdbcTemplate.update(sqlUpdate, updatedTransfer.getTransferStatusId(), updatedTransfer.getTransferId());
 		
 		if (updatedTransfer.getTransferStatus().equals("Approved")) {
 			Account fromAccount = accountDao.getAccountById(updatedTransfer.getAccountFrom());
@@ -106,7 +106,7 @@ public class TransferSqlDAO implements TransferDAO {
 						  "JOIN transfer_statuses s ON s.transfer_status_id = t.transfer_status_id " +
 						  "JOIN transfer_types ty ON ty.transfer_type_id = t.transfer_type_id " +
 						  "WHERE (t.account_from = ? OR t.account_to = ?) " +
-						  "AND s.transfer_status_desc = \"Pending\"";
+						  "AND s.transfer_status_desc = 'Pending'";
 		
 		SqlRowSet results = jdbcTemplate.queryForRowSet(sqlQuery, thisAccount.getAccountId(), thisAccount.getAccountId());
 		List<Transfer> allPendingTransfers = new ArrayList<>();
