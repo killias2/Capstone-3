@@ -292,6 +292,9 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 									if (Double.parseDouble(moneyAmount) <= 0) {
 										System.out.println("Please enter an amount greater than 0.");
 									} 
+									else if ((Double.parseDouble(moneyAmount) * 1000) % 10 != 0) {
+										System.out.println("You cannot input increments of less than one cent.");
+									} 
 									else if (Double.parseDouble(moneyAmount) > ((double)userAccount.getBalance()/100)) {
 										System.out.println("Transfers should not be larger than remaining account balance.");
 									}
@@ -364,7 +367,9 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 									if (Double.parseDouble(moneyAmount) <= 0) {
 										System.out.println("Please enter an amount greater than 0.");
 									} 
-									
+									else if ((Double.parseDouble(moneyAmount) * 1000) % 10 != 0) {
+										System.out.println("You cannot input increments of less than one cent.");
+									} 
 									else {
 										transferAmount = (int) (Double.parseDouble(moneyAmount) * 100);
 										inputChecker2 = true;
@@ -463,7 +468,16 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 	
 	private String toMoney(int amount) {
 		String money = "";
-		money = String.valueOf(amount / 100) + ".00";
+		double amountDouble = (double)amount;
+		if (amount % 100 == 0) {
+			money = String.valueOf(amount / 100) + ".00";
+		}
+		else if (amount % 10 == 0) {
+			money = String.valueOf(amountDouble / 100) + "0";
+		}
+		else {
+			money = String.valueOf(amountDouble / 100);
+		}
 		return money;
 	}
 	
