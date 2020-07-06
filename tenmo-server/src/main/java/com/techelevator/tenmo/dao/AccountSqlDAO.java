@@ -43,16 +43,14 @@ public class AccountSqlDAO implements AccountDAO{
 		if(account.getAccountId() == transfer.getAccountFrom()) {
 			evalType = "-";
 		}
+		Double moneyDouble = (double)account.getBalance();
 		
 		
 		String sqlUpdate = "UPDATE accounts "
 						+ "SET balance = (? " + evalType + " ?) / 100 "
 						+ "WHERE account_id = ?";
 		
-		//account.setBalance((double) account.getBalance() / 100);
-		//transfer.setAmount((double) transfer.getAmount() / 100);
-		
-		jdbcTemplate.update(sqlUpdate, account.getBalance(), transfer.getAmount(), account.getAccountId());
+		jdbcTemplate.update(sqlUpdate, moneyDouble, transfer.getAmount(), account.getAccountId());
 		
 	}
 
